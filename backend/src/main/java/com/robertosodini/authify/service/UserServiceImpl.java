@@ -7,9 +7,7 @@ import com.robertosodini.authify.mapper.UserMapper;
 import com.robertosodini.authify.model.UserModel;
 import com.robertosodini.authify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
