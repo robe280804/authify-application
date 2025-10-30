@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: authify
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/authify
+    username: ${DB_NAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
