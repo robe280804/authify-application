@@ -4,10 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
-public class UserRequestDto {
-
-    @NotBlank(message = "Il nome non può essere vuoto")
-    private String name;
+public class AuthRequestDto {
 
     @NotBlank(message = "L'email non può essere vuota")
     @Email(message = "Formato email non valido")

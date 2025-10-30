@@ -1,3 +1,7 @@
+server:
+  servlet:
+    context-path: /api/v1.0
+
 spring:
   application:
     name: authify
@@ -10,3 +14,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 900000

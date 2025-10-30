@@ -2,20 +2,25 @@ package com.robertosodini.authify.mapper;
 
 import com.robertosodini.authify.dto.UserRequestDto;
 import com.robertosodini.authify.dto.UserResponseDto;
-import com.robertosodini.authify.model.User;
+import com.robertosodini.authify.model.UserModel;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class UserMapper {
 
-    public User convertToUserEntity(UserRequestDto request){
-        return User.builder()
+    private final PasswordEncoder encoder;
+
+    public UserModel convertToUserEntity(UserRequestDto request){
+        return UserModel.builder()
                 .userId(UUID.randomUUID().toString())
                 .name(request.getName())
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(encoder.encode(request.getPassword()))
                 .isAccountVerify(false)
                 .resetOtpExpireAt(0L)
                 .verifyOtp(null)
@@ -25,12 +30,12 @@ public class UserMapper {
                 .build();
     }
 
-    public UserResponseDto convertToUserResponse(User user){
+    public UserResponseDto convertToUserResponse(UserModel userModel){
         return UserResponseDto.builder()
-                .userId(user.getUserId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .isAccountVerified(user.getIsAccountVerify())
+                .userId(userModel.getUserId())
+                .name(userModel.getName())
+                .email(userModel.getEmail())
+                .isAccountVerified(userModel.getIsAccountVerify())
                 .build();
     }
 }
