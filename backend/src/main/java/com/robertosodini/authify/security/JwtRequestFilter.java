@@ -7,6 +7,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final UserDetailsServiceImpl userDetailsService;
@@ -59,7 +61,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 }
             }
         }
-
         // Valido il token e setto il security context
         if (jwt != null){
             email = jwtUtil.extractEmail(jwt);
@@ -76,7 +77,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
     // Salvo l'utente nel security-context
-    private String setSecurityContext(UserDetails userDetails, HttpServletRequest request){
+    private void setSecurityContext(UserDetails userDetails, HttpServletRequest request){
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities()
         );

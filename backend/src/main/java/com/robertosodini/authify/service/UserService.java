@@ -7,4 +7,5 @@ public interface UserService {
 
     UserResponseDto createUser(UserRequestDto request);
 
+    UserResponseDto getUserInfo(String email);
 }
