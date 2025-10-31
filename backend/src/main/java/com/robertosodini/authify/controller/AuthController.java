@@ -2,6 +2,7 @@ package com.robertosodini.authify.controller;
 
 import com.robertosodini.authify.dto.AuthRequestDto;
 import com.robertosodini.authify.dto.AuthResponseDto;
+import com.robertosodini.authify.dto.OtpDto;
 import com.robertosodini.authify.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,5 +41,18 @@ public class AuthController {
     @GetMapping("/is-authenticated")
     public ResponseEntity<Boolean> isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name") String email){
         return ResponseEntity.ok(email != null);
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<Void> sendVerifyOtp(@CurrentSecurityContext(expression = "authentication?.name") String email){
+        authService.sendOtp(email);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<Void> verifyOtp(@RequestBody @Valid OtpDto request,
+                                          @CurrentSecurityContext(expression = "authentication?.name") String email){
+        authService.verifyOtp(request, email);
+        return ResponseEntity.ok().build();
     }
 }

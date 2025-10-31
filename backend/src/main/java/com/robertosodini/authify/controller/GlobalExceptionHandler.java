@@ -1,6 +1,8 @@
 package com.robertosodini.authify.controller;
 
 import com.robertosodini.authify.exceptions.EmailAlredyRegister;
+import com.robertosodini.authify.exceptions.InvalidOtp;
+import com.robertosodini.authify.exceptions.OtpExpired;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +21,20 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(InvalidOtp.class)
+    public ResponseEntity<Object> invalidOtp(InvalidOtp ex, WebRequest request){
+        return generateResponse("INVALID_OTP", HttpStatus.UNAUTHORIZED, ex, request);
+    }
+
+    @ExceptionHandler(OtpExpired.class)
+    public ResponseEntity<Object> otpExpired(OtpExpired ex, WebRequest request){
+        return generateResponse("OTP_EXPIRED", HttpStatus.UNAUTHORIZED, ex, request);
+    }
+
     @ExceptionHandler(EmailAlredyRegister.class)
     public ResponseEntity<Object> emailAlredyRegistered(EmailAlredyRegister ex, WebRequest request){
         return generateResponse("EMAIL_ALREDY_REGISTERED", HttpStatus.CONFLICT, ex, request);
     }
-
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Object> badCredential(BadCredentialsException ex, WebRequest request){
