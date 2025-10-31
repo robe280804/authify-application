@@ -16,6 +16,7 @@ public class UserServiceImpl implements UserService{
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final EmailService emailService;
 
     @Override
     public UserResponseDto createUser(UserRequestDto request) {
@@ -24,6 +25,8 @@ public class UserServiceImpl implements UserService{
         }
         UserModel userModel = userMapper.convertToUserEntity(request);
         UserModel newUserModel = userRepository.save(userModel);
+        // Invio email
+        emailService.sendHtmlEmail(newUserModel.getEmail(), newUserModel.getName());
         return userMapper.convertToUserResponse(newUserModel);
     }
 
