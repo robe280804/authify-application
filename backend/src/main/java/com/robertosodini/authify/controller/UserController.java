@@ -1,5 +1,6 @@
 package com.robertosodini.authify.controller;
 
+import com.robertosodini.authify.dto.PasswordRequestDto;
 import com.robertosodini.authify.dto.UserRequestDto;
 import com.robertosodini.authify.dto.UserResponseDto;
 import com.robertosodini.authify.service.UserServiceImpl;
@@ -18,11 +19,22 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<UserResponseDto> register(@RequestBody @Valid UserRequestDto request){
         return ResponseEntity.status(201).body(userService.createUser(request));
-        // TODO: send email
     }
 
     @GetMapping("/user")
     public ResponseEntity<UserResponseDto> getUserInfo(@CurrentSecurityContext(expression = "authentication?.name") String email){
         return ResponseEntity.ok(userService.getUserInfo(email));
+    }
+
+    @PostMapping("/send-reset-otp")
+    public ResponseEntity<Void> sendResetOtp(@RequestParam String email){
+        userService.sendResetOtp(email);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody @Valid PasswordRequestDto request){
+        userService.resetPassword(request);
+        return ResponseEntity.ok().build();
     }
 }
