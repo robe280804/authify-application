@@ -22,11 +22,8 @@ public class UserMapper {
                 .email(request.getEmail())
                 .password(encoder.encode(request.getPassword()))
                 .isAccountVerify(false)
-                .resetOtpExpireAt(0L)
                 .verifyOtp(null)
                 .verifyOtpExpireAt(0L)
-                .resetOtp(null)
-                .resetOtpExpireAt(0L)
                 .build();
     }
 

@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -26,6 +27,7 @@ public class UserServiceImpl implements UserService{
     private final UserMapper userMapper;
     private final EmailService emailService;
     private final PasswordEncoder encoder;
+    private final ResetOtpService resetOtpService;
 
     /// Registrazione
     @Override
@@ -54,44 +56,18 @@ public class UserServiceImpl implements UserService{
         UserModel existUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato: " + email));
 
-        // Genero otp a 6 cifre
-       String otp =  String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
-       
-       // Expire time 15 minuti             
-        long expiration = System.currentTimeMillis() + (15 * 60 * 1000);
-        
-        // TODO: Eseguire in un query sola dopo per evitare N+1
-        existUser.setResetOtp(otp);
-        existUser.setResetOtpExpireAt(expiration);
-        userRepository.save(existUser);
-
-        try {
-             // Invio otp email
-             emailService.sendResetOtpEmail(existUser.getEmail(), otp);
-        } catch (Exception ex){
-             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Impossibile inviare l'email");
-        }
+       String otp = resetOtpService.create(existUser);
+       emailService.sendResetOtpEmail(existUser.getEmail(), otp);
     }
 
+    // Conferma reset passsword
     @Override
-    public void resetPassword(PasswordRequestDto request) {
+    public String resetPassword(PasswordRequestDto request) {
         UserModel existUser = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato: " + request.getEmail()));
 
-        // TODO: Eseguire in un query sola dopo per evitare N+1
-        if (existUser.getResetOtp() == null || !existUser.getResetOtp().equals(request.getOtp())){
-            throw new InvalidOtp("OTP non valido");
-        }
-
-        if (existUser.getResetOtpExpireAt() < System.currentTimeMillis()){
-            throw new OtpExpired("OTP scaduto");
-        }
-
-        // TODO: Eseguire in un query sola dopo per evitare N+1 e utilizzare un Model separato per il OTP
-        existUser.setPassword(encoder.encode(request.getNewPassword()));
-        existUser.setResetOtp(null);
-        existUser.setResetOtpExpireAt(0L);
-        userRepository.save(existUser);
+        resetOtpService.verifyOtp(existUser, request.getOtp());
+        return "Password aggiornata con successo";
     }
 
 }

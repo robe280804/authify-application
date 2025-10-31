@@ -9,6 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 @Repository
 public interface ResetOtpRepository extends JpaRepository<ResetOtp, Long> {
 
@@ -17,4 +20,13 @@ public interface ResetOtpRepository extends JpaRepository<ResetOtp, Long> {
             "SET ro.revoked = true " +
             "WHERE ro.user = :user")
     void revokeAllByUser(@Param("user") UserModel user);
+
+    @Modifying
+    @Query("UPDATE ResetOtp ro " +
+            "SET ro.revoked = true " +
+            "WHERE ro.user = :user " +
+            "AND ro.otp = :otp " +
+            "AND ro.revoked = false " +
+            "AND ro.expiryOtp > :now")
+    int verifyAndRevokeOtp(@Param("user") UserModel user, @Param("otp") String otp, @Param("now") LocalDateTime now);
 }

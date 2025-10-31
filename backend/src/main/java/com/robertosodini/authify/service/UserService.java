@@ -12,7 +12,7 @@ public interface UserService {
 
     void sendResetOtp(String email);
 
-    void resetPassword(PasswordRequestDto request);
+    String resetPassword(PasswordRequestDto request);
 
 
 }

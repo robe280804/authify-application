@@ -34,8 +34,6 @@ public class UserModel {
     private String verifyOtp;
     private Boolean isAccountVerify;
     private Long verifyOtpExpireAt;
-    private String resetOtp;
-    private Long resetOtpExpireAt;
 
     @CreationTimestamp
     @Column(updatable = false)
