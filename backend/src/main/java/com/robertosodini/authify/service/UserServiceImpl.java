@@ -27,6 +27,7 @@ public class UserServiceImpl implements UserService{
     private final EmailService emailService;
     private final PasswordEncoder encoder;
 
+    /// Registrazione
     @Override
     public UserResponseDto createUser(UserRequestDto request) {
         if (userRepository.existsByEmail(request.getEmail())){
@@ -39,6 +40,7 @@ public class UserServiceImpl implements UserService{
         return userMapper.convertToUserResponse(newUserModel);
     }
 
+    ///  Info user
     @Override
     public UserResponseDto getUserInfo(String email) {
         return userRepository.findByEmail(email)
@@ -46,6 +48,7 @@ public class UserServiceImpl implements UserService{
                 .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato"));
     }
 
+    /// Reset password OTP
     @Override
     public void sendResetOtp(String email) {
         UserModel existUser = userRepository.findByEmail(email)

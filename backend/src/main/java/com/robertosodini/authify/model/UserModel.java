@@ -22,9 +22,11 @@ public class UserModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(unique = true)
+
+    @Column(unique = true, name = "user_id")
     private String userId;
     private String name;
+
     @Column(unique = true)
     private String email;
     private String password;
