@@ -10,7 +10,7 @@ public interface UserService {
 
     UserResponseDto getUserInfo(String email);
 
-    void sendResetOtp(String email);
+    String sendResetOtp(String email);
 
     String resetPassword(PasswordRequestDto request);
 

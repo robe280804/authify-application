@@ -37,13 +37,15 @@ public class ResetOtpService {
                 .revoked(false)
                 .build();
 
-        return resetOtp.getResetPasswordOtp();
+        resetOtpRepository.save(resetOtp);
+        return otp;
     }
 
     @Transactional
     public void verifyOtp(UserModel user, String otp){
+        String hashOtp = DigestUtils.sha3_256Hex(otp);
         // Eseguo tutto in un unica query (controllo se esiste, se valido, e lo imposto come revoked)
-        int updated = resetOtpRepository.verifyAndRevokeOtp(user, otp, LocalDateTime.now());
+        int updated = resetOtpRepository.verifyAndRevokeOtp(user, hashOtp, LocalDateTime.now());
         if (updated <= 0) {
             throw new InvalidOtp("Il tuo OTP non è più valido o è già stato usato.");
         }

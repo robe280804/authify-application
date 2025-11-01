@@ -30,10 +30,7 @@ public class UserModel {
     @Column(unique = true)
     private String email;
     private String password;
-
-    private String verifyOtp;
     private Boolean isAccountVerify;
-    private Long verifyOtpExpireAt;
 
     @CreationTimestamp
     @Column(updatable = false)

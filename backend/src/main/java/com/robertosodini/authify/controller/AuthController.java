@@ -23,6 +23,7 @@ public class AuthController {
 
     private final AuthService authService;
 
+    /// Login
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid AuthRequestDto request){
         AuthResponseDto response = authService.login(request);
@@ -30,7 +31,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("jwt", response.getToken())
                 .httpOnly(true)
                 .path("/")
-                .maxAge(Duration.ofDays(1))
+                .maxAge(Duration.ofMinutes(30))
                 .sameSite("Strict")
                 .build();
 
@@ -38,17 +39,20 @@ public class AuthController {
                 .body(new AuthResponseDto(response.getEmail(), response.getToken()));
     }
 
+    ///  Utente autenticato?
     @GetMapping("/is-authenticated")
     public ResponseEntity<Boolean> isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name") String email){
         return ResponseEntity.ok(email != null);
     }
 
+    /// OTP verifica account
     @PostMapping("/send-otp")
     public ResponseEntity<Void> sendVerifyOtp(@CurrentSecurityContext(expression = "authentication?.name") String email){
         authService.sendOtp(email);
         return ResponseEntity.ok().build();
     }
 
+    /// Conferma verifica account
     @PostMapping("/verify-otp")
     public ResponseEntity<Void> verifyOtp(@RequestBody @Valid OtpDto request,
                                           @CurrentSecurityContext(expression = "authentication?.name") String email){

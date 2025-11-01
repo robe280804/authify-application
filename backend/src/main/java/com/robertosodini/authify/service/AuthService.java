@@ -8,7 +8,7 @@ public interface AuthService {
 
     AuthResponseDto login(AuthRequestDto request);
 
-    void sendOtp(String email);
+    String sendOtp(String email);
 
 
     void verifyOtp(OtpDto otp, String email);

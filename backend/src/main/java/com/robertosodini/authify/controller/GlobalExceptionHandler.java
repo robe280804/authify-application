@@ -1,8 +1,6 @@
 package com.robertosodini.authify.controller;
 
-import com.robertosodini.authify.exceptions.EmailAlredyRegister;
-import com.robertosodini.authify.exceptions.InvalidOtp;
-import com.robertosodini.authify.exceptions.OtpExpired;
+import com.robertosodini.authify.exceptions.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +18,16 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(VerificationUpdate.class)
+    public ResponseEntity<Object> verificationUpdate(VerificationUpdate ex, WebRequest request){
+        return generateResponse("VERIFICATION_UPDATE_ERR", HttpStatus.INTERNAL_SERVER_ERROR, ex, request);
+    }
+
+    @ExceptionHandler(PasswordUpdate.class)
+    public ResponseEntity<Object> passwordUpdate(PasswordUpdate ex, WebRequest request){
+        return generateResponse("PASSWORD_UPDATE_ERR", HttpStatus.INTERNAL_SERVER_ERROR, ex, request);
+    }
 
     @ExceptionHandler(InvalidOtp.class)
     public ResponseEntity<Object> invalidOtp(InvalidOtp ex, WebRequest request){

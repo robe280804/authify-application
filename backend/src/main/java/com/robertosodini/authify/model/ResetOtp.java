@@ -19,8 +19,8 @@ public class ResetOtp {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY) // Evito di caricare l'utente
+    @JoinColumn(name = "user_id", nullable = false)
     private UserModel user;
 
     @Column(nullable = false, name = "otp")

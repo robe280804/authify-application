@@ -25,7 +25,7 @@ public interface ResetOtpRepository extends JpaRepository<ResetOtp, Long> {
     @Query("UPDATE ResetOtp ro " +
             "SET ro.revoked = true " +
             "WHERE ro.user = :user " +
-            "AND ro.otp = :otp " +
+            "AND ro.resetPasswordOtp = :otp " +
             "AND ro.revoked = false " +
             "AND ro.expiryOtp > :now")
     int verifyAndRevokeOtp(@Param("user") UserModel user, @Param("otp") String otp, @Param("now") LocalDateTime now);

@@ -16,22 +16,25 @@ public class UserController {
 
     private final UserServiceImpl userService;
 
+    ///  Registrazione
     @PostMapping("/register")
     public ResponseEntity<UserResponseDto> register(@RequestBody @Valid UserRequestDto request){
         return ResponseEntity.status(201).body(userService.createUser(request));
     }
 
+    ///  Profilo utente
     @GetMapping("/user")
     public ResponseEntity<UserResponseDto> getUserInfo(@CurrentSecurityContext(expression = "authentication?.name") String email){
         return ResponseEntity.ok(userService.getUserInfo(email));
     }
 
+    ///  Password reset OTP
     @PostMapping("/send-reset-otp")
-    public ResponseEntity<Void> sendResetOtp(@RequestParam String email){
-        userService.sendResetOtp(email);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<String> sendResetOtp(@RequestParam String email){
+        return ResponseEntity.ok(userService.sendResetOtp(email));
     }
 
+    /// Salva nuova password
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody @Valid PasswordRequestDto request){
         return ResponseEntity.ok(userService.resetPassword(request));
