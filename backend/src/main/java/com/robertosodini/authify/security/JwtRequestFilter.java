@@ -26,13 +26,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtUtil jwtUtil;
 
-    private static final List<String> PUBLIC_URLS = List.of("/login", "/register", "/send-reset-otp", "/reset-password", "/logout");
+    private static final List<String> PUBLIC_URLS = List.of("/login", "/register", "/send-reset-otp", "/reset-password");
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-
+        log.info("[FILTRO JWT] Filtro in esecuzione");
         String path = request.getServletPath();
 
         if (PUBLIC_URLS.contains(path)) {

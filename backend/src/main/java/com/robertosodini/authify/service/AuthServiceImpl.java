@@ -9,15 +9,20 @@ import com.robertosodini.authify.exceptions.VerificationUpdate;
 import com.robertosodini.authify.model.UserModel;
 import com.robertosodini.authify.repository.UserRepository;
 import com.robertosodini.authify.util.JwtUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -100,6 +105,24 @@ public class AuthServiceImpl implements AuthService{
             throw new VerificationUpdate("Non è stato possibile veriificare il tuo account");
         }
         log.info("[VERIFY_ACCOUNT_OTP] Account di {} verificato con successo", email);
+    }
+
+    @Override
+    public String logout(String email, HttpServletResponse response) {
+        log.info("[LOGOUT] Logout in esecuzione per {}", email);
+        ResponseCookie cookie = ResponseCookie.from("jwt", "")
+                .httpOnly(true)
+                .secure(false) //true in prod
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+
+        SecurityContextHolder.clearContext();
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        log.info("[LOGOUT[ Logout avvenuto con successo per {}", email);
+        return "Logout avvenuto con successo!";
     }
 
 }

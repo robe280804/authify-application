@@ -4,6 +4,7 @@ import com.robertosodini.authify.dto.AuthRequestDto;
 import com.robertosodini.authify.dto.AuthResponseDto;
 import com.robertosodini.authify.dto.OtpDto;
 import com.robertosodini.authify.service.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -58,5 +59,10 @@ public class AuthController {
                                           @CurrentSecurityContext(expression = "authentication?.name") String email){
         authService.verifyOtp(request, email);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@CurrentSecurityContext(expression = "authentication?.name") String email, HttpServletResponse response){
+        return ResponseEntity.ok(authService.logout(email, response));
     }
 }

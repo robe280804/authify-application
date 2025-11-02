@@ -3,6 +3,7 @@ package com.robertosodini.authify.service;
 import com.robertosodini.authify.dto.AuthRequestDto;
 import com.robertosodini.authify.dto.AuthResponseDto;
 import com.robertosodini.authify.dto.OtpDto;
+import jakarta.servlet.http.HttpServletResponse;
 
 public interface AuthService {
 
@@ -13,4 +14,5 @@ public interface AuthService {
 
     void verifyOtp(OtpDto otp, String email);
 
+    String logout(String email, HttpServletResponse response);
 }
