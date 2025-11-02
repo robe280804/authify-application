@@ -13,7 +13,7 @@ export const Login = () => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
-    const { backendUrl, setIsLoggedIn } = useContext(AppContext)
+    const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContext)
     const navigate = useNavigate();
 
     const onSubmitHandler = async (event) => {
@@ -34,7 +34,8 @@ export const Login = () => {
                 // Login API
                 const response = await axios.post(`${backendUrl}/login`, {  email, password });
                 if (response.status === 200) {
-                    setIsLoggedIn(true)
+                    setIsLoggedIn(true);
+                    getUserData();
                     navigate("/");
                 } else {
                     toast.error("Email o password errate");
