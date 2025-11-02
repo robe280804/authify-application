@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom"
 import { assets } from "../assets/assets"
-import { useContext, useRef, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";
@@ -38,7 +38,7 @@ export const EmailVerify = () => {
                 inputRef.current[index].value = digit
             }
         });
-        const next = paste.lenght < 6 ? paste.lenght : 5;
+        const next = paste.length < 6 ? paste.lenght : 5;
         inputRef.current[next].focus();
     }
 
@@ -66,6 +66,10 @@ export const EmailVerify = () => {
             setLoading(false);
         }
     }
+
+    useEffect(() => {
+        isLoggedIn && userData.isAccountVerify && navigate("/");
+    }, [isLoggedIn, userData]);
 
     return (
         <div className="email-verify-container d-flex align-items-center justify-content-center vh-100 position-relative"

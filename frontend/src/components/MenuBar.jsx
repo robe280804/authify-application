@@ -48,10 +48,9 @@ export const MenuBar = () => {
                 toast.success("Ti è stata inviata un email con il codice OTP ")
                 navigate("/email-verify")
             } else {
-                toast.error("Impossibile inviare il codice OTP ")
+                toast.error("Qualcosa è andato storto ")
             }
         } catch (err){
-            console.log(err)
             toast.error(err.message)
         }
     }
