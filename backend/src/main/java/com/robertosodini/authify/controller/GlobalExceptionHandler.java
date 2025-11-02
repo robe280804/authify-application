@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -62,6 +63,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<Object> usernameNotFound(UsernameNotFoundException ex, WebRequest request){
         return generateResponse("USERNAME_NOT_FOUND", HttpStatus.NOT_FOUND, ex, request);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Object> handleArgumentNotValidEx(MethodArgumentNotValidException ex, WebRequest request){
+        Map<String, Object> response = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(err ->
+                response.put(err.getField(), err.getDefaultMessage()));
+
+        response.put("timestamps", LocalDateTime.now());
+        response.put("status", HttpStatus.BAD_REQUEST);
+        response.put("error", "Richiesta errata");
+        response.put("message", ex.getMessage());
+        response.put("path", extractPath(request));
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     private static ResponseEntity<Object> generateResponse(
