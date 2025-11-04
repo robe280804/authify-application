@@ -5,7 +5,10 @@ services:
     ports:
       - 8080:8080
     depends_on:
-      - mysqldb
+      mysqldb:
+        condition: service_started
+      kafka:
+        condition: service_started
     environment:
       # Sovrascrivo i valori del file application.yml
       SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/authify
@@ -14,6 +17,27 @@ services:
       SPRING_MAIL_USERNAME: ${EMAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${EMAIL_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+  zookeeper:
+    image: zookeeper:3.8
+    container_name: my-zookeeper
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: my-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
 
   mysqldb:
     image: "mysql:8.0"
@@ -25,3 +49,4 @@ services:
       MYSQL_USER: new_user
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: new_user
+
