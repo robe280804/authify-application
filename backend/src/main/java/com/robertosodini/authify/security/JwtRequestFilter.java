@@ -35,6 +35,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private static final List<String> PUBLIC_URLS = List.of("/login", "/register", "/send-reset-otp", "/reset-password");
 
+    /// Ottengo il token dall'header o dai cookie
+    /// Se != null estraggo l'email e carico l'entità user details
+    /// Valido il token e se va a buon fine, popolo il security context
+    /// Se il token è scaduto o non valido, controllo se l'utente ha un refresh token valido non scaduto
+    /// Se positivo, genero un nuovo access token e lo inserisco in un Cookie
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -88,6 +93,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    // Estraggo jwt dall'header o cookie
     private String extractJwtFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

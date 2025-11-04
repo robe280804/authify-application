@@ -32,7 +32,16 @@ public class UserServiceImpl implements UserService{
     private final PasswordEncoder encoder;
     private final ResetOtpService resetOtpService;
 
-    /// Registrazione
+    /**
+     * <p> Il metodo esegue i seguenti step: </p>
+     * <ul>
+     *     <li> Verifico che l'email non sia già registrata </li>
+     *     <li> Creo l'utente e lo salvo nel db, inviandogli un email di conferma </li>
+     *     <li> Ritorno un DTO con i dati della registrazione </li>
+     * </ul>
+     * @param request DTO con nome, email e password
+     * @return DTO con i dati dell'utente
+     */
     @Override
     public UserResponseDto createUser(UserRequestDto request) {
         log.info("[REGISTER_USER] Registrazione utente con email: {} in esecuizione", request.getEmail());
@@ -59,7 +68,7 @@ public class UserServiceImpl implements UserService{
                 .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato"));
     }
 
-    /// Reset password OTP
+    /// Reset password OTP (Logica uguale a quello in authServiceImpl)
     @Override
     public String sendResetOtp(String email) {
         log.info("[RESET_PASSWORD_OTP] Richiesta reset password per {}", email);
@@ -73,7 +82,7 @@ public class UserServiceImpl implements UserService{
        return "Ti è stata inviata un email per resettare la password";
     }
 
-    /// Conferma reset password
+    /// Conferma reset password (Logica uguale a quello in authServiceImpl)
     @Override
     @Transactional
     public String resetPassword(PasswordRequestDto request) {

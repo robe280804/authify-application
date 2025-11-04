@@ -33,11 +33,13 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    // Claims token
     public String generateToken(Boolean isAccess, UserDetails userDetails){
         Map<String, Object> claims = new HashMap<>();
         return createToken(isAccess, claims, userDetails.getUsername());
     }
 
+    // Creazione token, true = access token, false = refresh token
     private String createToken(Boolean isAccess, Map<String, Object> claims, String username) {
         return Jwts.builder()
                 .setClaims(claims)

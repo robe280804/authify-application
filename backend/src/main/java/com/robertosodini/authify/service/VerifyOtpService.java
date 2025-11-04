@@ -19,16 +19,17 @@ public class VerifyOtpService {
 
     private final VerifyOtpRepository verifyOtpRepository;
 
+    /// Genero OTP a 6 cifre, eseguendo l'hashing
+    /// Imposto gli OTP precedenti come revoked per evitare conflitti
+    /// Salvo il nuovo OTP
     @Transactional
     public String create(UserModel user){
-        // Genero otp a 6 cifre
+
         String otp =  String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
 
-        // Eseguo hashing
         String hashOtp = DigestUtils.sha3_256Hex(otp);
         LocalDateTime expiration = LocalDateTime.now().plusMinutes(15);
 
-        // Imposto come revoked tutti quelli precedenti, per evitare conflitti
         verifyOtpRepository.revokeAllByUser(user);
 
         VerifyOtp verifyOtp = VerifyOtp.builder()

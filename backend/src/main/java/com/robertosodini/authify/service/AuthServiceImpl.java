@@ -53,6 +53,18 @@ public class AuthServiceImpl implements AuthService{
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    /**
+     * <p>Il metodo esegue i seguenti step: </p>
+     * <ul>
+     *     <li> Creo il DTO login history per tener traccia del login </li>
+     *     <li> Autentico l'utente e ottengo l'autenticazione </li>
+     *     <li> Creo access token e refresh token </li>
+     *     <li> Imposto il login history come success=true e lo invio a kafka in modo async, ritorno i dati del login + cookie </li>
+     * </ul>
+     * @param request DTO con email e password
+     * @param httpRequest per ottenere più info sul client
+     * @return DTO e Cookie
+     */
     @Override
     public AuthResponseDto login(@Valid AuthRequestDto request, HttpServletRequest httpRequest) {
         log.info("[LOGIN_USER] Login in esecuzione per {}", request.getEmail());
@@ -93,6 +105,7 @@ public class AuthServiceImpl implements AuthService{
         }
     }
 
+    // Imposto il login history come fallito e li la motivazione
     private void sendFailureLoginHistory(LoginHistoryDto loginHistoryDto, String failureMsg){
         loginHistoryDto.setSuccess(false);
         loginHistoryDto.setFailureReason(failureMsg);
@@ -106,6 +119,16 @@ public class AuthServiceImpl implements AuthService{
         loginHistoryProducer.sendLoginHistory(loginHistoryDto);
     }
 
+    /**
+     * <p> Il metodo esegue i seguenti step: </p>
+     * <ul>
+     *     <li> Ottengo l'utente e controllo che il suo account non sia già verificato </li>
+     *     <li> Creo un codice OTP e lo invio nell'email all'utente </li>
+     * </ul>
+     * @exception UsernameNotFoundException se non trovo l'utente
+     * @param email dell'utente
+     * @return Messaggio di conferma
+     */
     @Override
     public String sendOtp(String email) {
         log.info("[VERIFY_ACCOUNT_OTP] Verificazione dell'account per {}", email);
@@ -124,6 +147,17 @@ public class AuthServiceImpl implements AuthService{
         return "Ti è stata inviata un email per verificare l'account";
     }
 
+    /**
+     * <p> Il metodo esegue i seguenti step: </p>
+     * <ul>
+     *     <li> Ottengo l'utente e verifico che l'OTP sia valido </li>
+     *     <li> Aggiorno l'utente mettendo account verificato = true </li>
+     * </ul>
+     * @exception UsernameNotFoundException se non trovo l'utente
+     * @exception VerificationUpdate se la query di update utente non viene eseguita
+     * @param request
+     * @param email
+     */
     @Override
     @Transactional
     public void verifyOtp(OtpDto request, String email) {
@@ -141,6 +175,16 @@ public class AuthServiceImpl implements AuthService{
         log.info("[VERIFY_ACCOUNT_OTP] Account di {} verificato con successo", email);
     }
 
+    /**
+     * <p> Il metodo esegue i seguenti step: </p>
+     * <ul>
+     *     <li> Rimuovo tutti i cookie con jwt, ripulisco il security context </li>
+     *     <li> Imposto tutti i refresh token nel db dell'utente come revoked = true </li>
+     * </ul>
+     * @param email utente
+     * @param response per rimuovere i cookie
+     * @return messaggio di risposta
+     */
     @Override
     public String logout(String email, HttpServletResponse response) {
         log.info("[LOGOUT] Logout in esecuzione per {}", email);

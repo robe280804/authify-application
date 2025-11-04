@@ -21,8 +21,9 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
 
+    /// Revoco tutti i refresh token precedenti per evitare conflitti
+    /// Creo un refresh token, eseguo l'hashing e lo salvo nel db
     @Transactional
     public void generateToken(UserDetails userDetails){
 
