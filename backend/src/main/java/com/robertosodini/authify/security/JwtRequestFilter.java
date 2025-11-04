@@ -1,6 +1,8 @@
 package com.robertosodini.authify.security;
 
+import com.robertosodini.authify.repository.RefreshTokenRepository;
 import com.robertosodini.authify.util.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -8,6 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +20,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -25,6 +31,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     private static final List<String> PUBLIC_URLS = List.of("/login", "/register", "/send-reset-otp", "/reset-password");
 
@@ -40,40 +47,58 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return;
         }
 
-        String jwt = null;
+        String jwt = extractJwtFromRequest(request);
         String email = null;
 
-        // Ottengo l'header authorization
-        final String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")){
-           jwt =  authHeader.substring(7);
-        }
 
-        // Se il token non è nell'header controllo nel cookie
-        if (jwt == null){
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null){
-                for (Cookie cookie : cookies){
-                    if ("jwt".equals(cookie.getName())){
-                        jwt = cookie.getValue();
-                        break;
-                    }
-                }
-            }
-        }
         // Valido il token e setto il security context
         if (jwt != null){
-            email = jwtUtil.extractEmail(jwt);
+            try {
+                email = jwtUtil.extractEmail(jwt);
 
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null){
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                if (jwtUtil.validateToken(jwt, userDetails)){
-                   setSecurityContext(userDetails, request);
+                    if (jwtUtil.validateToken(jwt, userDetails)) {
+                        setSecurityContext(userDetails, request);
+                    }
                 }
+            } catch (ExpiredJwtException ex){
+                log.info("[FILTRO JWT] Access token scaduto");
+                email = ex.getClaims().getSubject();
+                log.info("email {}", email);// Se il token è scaduto ottengo ugualmente l'email
             }
         }
+        // Verifico se è presente un refresh-token valido
+        if (email != null && refreshTokenRepository.isRefreshValid(email, LocalDateTime.now())){
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            String newAccessToken = jwtUtil.generateToken(true, userDetails);
+
+            ResponseCookie cookie = ResponseCookie.from("jwt", newAccessToken)
+                    .httpOnly(true)
+                    .path("/")
+                    .maxAge(Duration.ofMinutes(15))
+                    .sameSite("Strict")
+                    .build();
+
+            setSecurityContext(userDetails, request);
+            response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        }
+
         filterChain.doFilter(request, response);
+    }
+
+    private String extractJwtFromRequest(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("jwt".equals(cookie.getName())) return cookie.getValue();
+            }
+        }
+        return null;
     }
 
     // Salvo l'utente nel security-context

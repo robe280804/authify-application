@@ -22,25 +22,28 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    @Value("${jwt.expiration}")
+    @Value("${jwt.access_expiration}")
     private Long shortExpiration;
+
+    @Value("${jwt.refresh_expiration}")
+    private Long longExpiration;
 
     private Key convertKey(){
         byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(UserDetails userDetails){
+    public String generateToken(Boolean isAccess, UserDetails userDetails){
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
+        return createToken(isAccess, claims, userDetails.getUsername());
     }
 
-    private String createToken(Map<String, Object> claims, String username) {
+    private String createToken(Boolean isAccess, Map<String, Object> claims, String username) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + shortExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + ((isAccess) ? shortExpiration: longExpiration)))
                 .signWith(convertKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

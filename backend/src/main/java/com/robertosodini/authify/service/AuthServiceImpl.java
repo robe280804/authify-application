@@ -10,6 +10,7 @@ import com.robertosodini.authify.exceptions.VerificationUpdate;
 import com.robertosodini.authify.kafka.LoginHistoryProducer;
 import com.robertosodini.authify.model.LoginHistory;
 import com.robertosodini.authify.model.UserModel;
+import com.robertosodini.authify.repository.RefreshTokenRepository;
 import com.robertosodini.authify.repository.UserRepository;
 import com.robertosodini.authify.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,7 +50,8 @@ public class AuthServiceImpl implements AuthService{
     private final VerifyOtpService verifyOtpService;
     private final LoginHistoryService loginHistoryService;
     private final LoginHistoryProducer loginHistoryProducer;
-
+    private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     public AuthResponseDto login(@Valid AuthRequestDto request, HttpServletRequest httpRequest) {
@@ -59,13 +61,14 @@ public class AuthServiceImpl implements AuthService{
 
         Authentication auth = authenticate(request.getEmail(), request.getPassword(), loginHistory);
         final UserDetails userDetails = (UserDetails) auth.getPrincipal();
-        final String token = jwtUtil.generateToken(userDetails);
+        final String accessToken = jwtUtil.generateToken(true, userDetails);
+        refreshTokenService.generateToken(userDetails);  // Genero e salvo il refresh-token
 
         loginHistory.setSuccess(true);
         sendLoginHistory(loginHistory);  // Invio a kafka per salvataggio async
 
         log.info("[LOGIN_USER] Login andato a buon fine per {}", request.getEmail());
-        return new AuthResponseDto(userDetails.getUsername(), token);
+        return new AuthResponseDto(userDetails.getUsername(), accessToken);
     }
 
 
@@ -150,6 +153,7 @@ public class AuthServiceImpl implements AuthService{
                 .build();
 
         SecurityContextHolder.clearContext();
+        refreshTokenRepository.revokedAllForUser(email);  // Rimuovo tutti i refresh token
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         log.info("[LOGOUT[ Logout avvenuto con successo per {}", email);
