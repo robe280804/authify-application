@@ -3,6 +3,7 @@ package com.robertosodini.authify.controller;
 import com.robertosodini.authify.dto.AuthRequestDto;
 import com.robertosodini.authify.dto.AuthResponseDto;
 import com.robertosodini.authify.dto.OtpDto;
+import com.robertosodini.authify.security.ratelimiter.RateLimit;
 import com.robertosodini.authify.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,6 +27,7 @@ public class AuthController {
     private final AuthService authService;
 
     /// Login
+    @RateLimit(limit = 3, timesWindowSecond = 60)
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid AuthRequestDto request, HttpServletRequest httpRequest){
         AuthResponseDto response = authService.login(request, httpRequest);
@@ -43,11 +45,13 @@ public class AuthController {
 
     ///  Utente autenticato?
     @GetMapping("/is-authenticated")
+    @RateLimit(limit = 10, timesWindowSecond = 60)
     public ResponseEntity<Boolean> isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name") String email){
         return ResponseEntity.ok(email != null);
     }
 
     /// OTP verifica account
+    @RateLimit(limit = 3, timesWindowSecond = 60)
     @PostMapping("/send-otp")
     public ResponseEntity<Void> sendVerifyOtp(@CurrentSecurityContext(expression = "authentication?.name") String email){
         authService.sendOtp(email);
@@ -55,6 +59,7 @@ public class AuthController {
     }
 
     /// Conferma verifica account
+    @RateLimit(limit = 10, timesWindowSecond = 60)
     @PostMapping("/verify-otp")
     public ResponseEntity<Void> verifyOtp(@RequestBody @Valid OtpDto request,
                                           @CurrentSecurityContext(expression = "authentication?.name") String email){
@@ -62,6 +67,7 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @RateLimit(limit = 10, timesWindowSecond = 60)
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@CurrentSecurityContext(expression = "authentication?.name") String email, HttpServletResponse response){
         return ResponseEntity.ok(authService.logout(email, response));

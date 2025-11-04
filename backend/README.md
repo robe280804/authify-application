@@ -13,3 +13,6 @@ azione come il Login e codici OTP hashati. Invio email tramite SMTP.
 # Avvio docker
 mvn clean package -DskipTests
 docker compose up -d --build 
+
+## Test locale
+docker compose -f local-test-compose.yml up -d

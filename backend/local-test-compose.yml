@@ -28,3 +28,6 @@ services:
       - redis-data:/data
     restart: unless-stopped
     command: [ "redis-server", "--appendonly", "yes" ]
+
+volumes:
+  redis-data:

@@ -1,5 +1,6 @@
 services:
   server:
+    container_name: app_container
     build: .
     restart: always
     ports:
@@ -8,6 +9,8 @@ services:
       mysqldb:
         condition: service_started
       kafka:
+        condition: service_started
+      redis:
         condition: service_started
     environment:
       # Sovrascrivo i valori del file application.yml
@@ -18,16 +21,17 @@ services:
       SPRING_MAIL_PASSWORD: ${EMAIL_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATA_REDIS_HOST: redis
 
   zookeeper:
     image: zookeeper:3.8
-    container_name: my-zookeeper
+    container_name: zookeeper_container
     ports:
       - "2181:2181"
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
-    container_name: my-kafka
+    container_name: kafka_container
     ports:
       - "9092:9092"
     environment:
@@ -41,6 +45,7 @@ services:
 
   mysqldb:
     image: "mysql:8.0"
+    container_name: mysql_container
     restart: always
     ports:
       - 3307:3306
@@ -49,4 +54,20 @@ services:
       MYSQL_USER: new_user
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: new_user
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    command: [ "redis-server", "--appendonly", "yes" ]
+
+volumes:
+  redis-data:
+  mysql-data:
 

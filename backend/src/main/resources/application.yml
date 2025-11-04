@@ -44,18 +44,19 @@ spring:
         spring.json.trusted.packages: "*"  # permette di deserializzare
       auto-offset-reset: earliest
 
-  redis:
-    host: localhost
-    port: 6379
-    timeout: 2000ms
-    connect-timeout: 2000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-        max-wait: -1ms
-      shutdown-timeout: 200ms
+  data:
+    redis:
+      host: redis  #localhost in locale
+      port: 6379
+      timeout: 2000ms
+      connect-timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+        shutdown-timeout: 200ms
 
 jwt:
   secret: ${JWT_SECRET}
