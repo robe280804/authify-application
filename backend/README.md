@@ -10,3 +10,6 @@ azione come il Login e codici OTP hashati. Invio email tramite SMTP.
 - login history
 - rateLimiter
 
+# Avvio docker
+mvn clean package -DskipTests
+docker compose up -d --build 

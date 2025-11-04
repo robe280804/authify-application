@@ -2,13 +2,13 @@ services:
 
   zookeeper:
     image: zookeeper:3.8
-    container_name: my-zookeeper
+    container_name: zookeeper_container
     ports:
       - "2181:2181"
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
-    container_name: my-kafka
+    container_name: kafka_container
     ports:
       - "9092:9092"
     environment:
@@ -18,3 +18,13 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    command: [ "redis-server", "--appendonly", "yes" ]
