@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -26,6 +28,9 @@ public class LoginHistory {
 
     @Column(nullable = false, name = "user_agent")
     private String userAgent;
+
+    @Column(name = "login_time", nullable = false)
+    private LocalDateTime loginTime;
 
     @Column(nullable = false)
     private Boolean success;

@@ -2,10 +2,12 @@ package com.robertosodini.authify.service;
 
 import com.robertosodini.authify.dto.AuthRequestDto;
 import com.robertosodini.authify.dto.AuthResponseDto;
+import com.robertosodini.authify.dto.LoginHistoryDto;
 import com.robertosodini.authify.dto.OtpDto;
 import com.robertosodini.authify.exceptions.InvalidOtp;
 import com.robertosodini.authify.exceptions.OtpExpired;
 import com.robertosodini.authify.exceptions.VerificationUpdate;
+import com.robertosodini.authify.kafka.LoginHistoryProducer;
 import com.robertosodini.authify.model.LoginHistory;
 import com.robertosodini.authify.model.UserModel;
 import com.robertosodini.authify.repository.UserRepository;
@@ -19,6 +21,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -31,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -43,33 +47,29 @@ public class AuthServiceImpl implements AuthService{
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final VerifyOtpService verifyOtpService;
+    private final LoginHistoryService loginHistoryService;
+    private final LoginHistoryProducer loginHistoryProducer;
 
-    // TODO: Implementare login history
+
     @Override
     public AuthResponseDto login(@Valid AuthRequestDto request, HttpServletRequest httpRequest) {
         log.info("[LOGIN_USER] Login in esecuzione per {}", request.getEmail());
 
-        String userAgent = httpRequest.getHeader("User-Agent");
-        String userIp = httpRequest.getLocalAddr();
-
-        LoginHistory loginHistory = LoginHistory.builder()
-                .userEmail(request.getEmail())
-                .userAgent(userAgent)
-                .userIp(userIp)
-                .success(false)
-                .build();
+        LoginHistoryDto loginHistory = loginHistoryService.create(httpRequest, request.getEmail());
 
         Authentication auth = authenticate(request.getEmail(), request.getPassword(), loginHistory);
         final UserDetails userDetails = (UserDetails) auth.getPrincipal();
         final String token = jwtUtil.generateToken(userDetails);
 
         loginHistory.setSuccess(true);
+        sendLoginHistory(loginHistory);  // Invio a kafka per salvataggio async
+
         log.info("[LOGIN_USER] Login andato a buon fine per {}", request.getEmail());
         return new AuthResponseDto(userDetails.getUsername(), token);
     }
 
-    // TODO: Se il logi fallisce mandarlo a kafka e salvarlo in async
-    private Authentication authenticate(String email, String password, LoginHistory loginHistory) {
+
+    private Authentication authenticate(String email, String password, LoginHistoryDto loginHistory) {
         Authentication auth;
         try {
             auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
@@ -77,23 +77,30 @@ public class AuthServiceImpl implements AuthService{
 
         } catch(BadCredentialsException ex) {
             log.warn("[LOGIN_USER] Login fallito per {}, credenziali errate", email);
-            loginHistory.setSuccess(false);
-            loginHistory.setFailureReason("Credenziali errate");
-
+            sendFailureLoginHistory(loginHistory, "Credenziali errate");
             throw new BadCredentialsException("Email o password errati");
         } catch(DisabledException ex) {
             log.warn("[LOGIN_USER] Login fallito per {}, account disabilitato", email);
-            loginHistory.setSuccess(false);
-            loginHistory.setFailureReason("Account disabilitato");
-
+            sendFailureLoginHistory(loginHistory, "Account disabilitato");
             throw new DisabledException("Account disabilitato");
         } catch(Exception ex) {
             log.error("[LOGIN_USER] Login fallito per {}, messaggio: [{}]", email, ex.getMessage());
-            loginHistory.setSuccess(false);
-            loginHistory.setFailureReason("Errore lato server");
-
+            sendFailureLoginHistory(loginHistory, "Errore lato server");
             throw new RuntimeException("Autenticazione fallita");
         }
+    }
+
+    private void sendFailureLoginHistory(LoginHistoryDto loginHistoryDto, String failureMsg){
+        loginHistoryDto.setSuccess(false);
+        loginHistoryDto.setFailureReason(failureMsg);
+        sendLoginHistory(loginHistoryDto);
+    }
+
+    // Non chiamo subito il producer kafka nel metodo di login, altrimenti sarebbe dipendente dall'invio.
+    // In questo la chiamata a producer non influenza il metodo di login con @Async
+    @Async
+    private void sendLoginHistory(LoginHistoryDto loginHistoryDto){
+        loginHistoryProducer.sendLoginHistory(loginHistoryDto);
     }
 
     @Override
