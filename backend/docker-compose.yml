@@ -1,0 +1,27 @@
+services:
+  server:
+    build: .
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - mysqldb
+    environment:
+      # Sovrascrivo i valori del file application.yml
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/authify
+      SPRING_DATASOURCE_USERNAME: new_user
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_MAIL_USERNAME: ${EMAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${EMAIL_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+
+  mysqldb:
+    image: "mysql:8.0"
+    restart: always
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_DATABASE: authify
+      MYSQL_USER: new_user
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: new_user
