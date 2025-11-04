@@ -3,11 +3,12 @@ package com.robertosodini.authify.service;
 import com.robertosodini.authify.dto.AuthRequestDto;
 import com.robertosodini.authify.dto.AuthResponseDto;
 import com.robertosodini.authify.dto.OtpDto;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface AuthService {
 
-    AuthResponseDto login(AuthRequestDto request);
+    AuthResponseDto login(AuthRequestDto request, HttpServletRequest httpRequest);
 
     String sendOtp(String email);
 

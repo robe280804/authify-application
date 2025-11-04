@@ -4,6 +4,7 @@ import com.robertosodini.authify.dto.AuthRequestDto;
 import com.robertosodini.authify.dto.AuthResponseDto;
 import com.robertosodini.authify.dto.OtpDto;
 import com.robertosodini.authify.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,8 @@ public class AuthController {
 
     /// Login
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid AuthRequestDto request){
-        AuthResponseDto response = authService.login(request);
+    public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid AuthRequestDto request, HttpServletRequest httpRequest){
+        AuthResponseDto response = authService.login(request, httpRequest);
 
         ResponseCookie cookie = ResponseCookie.from("jwt", response.getToken())
                 .httpOnly(true)

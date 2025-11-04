@@ -6,9 +6,11 @@ import com.robertosodini.authify.dto.OtpDto;
 import com.robertosodini.authify.exceptions.InvalidOtp;
 import com.robertosodini.authify.exceptions.OtpExpired;
 import com.robertosodini.authify.exceptions.VerificationUpdate;
+import com.robertosodini.authify.model.LoginHistory;
 import com.robertosodini.authify.model.UserModel;
 import com.robertosodini.authify.repository.UserRepository;
 import com.robertosodini.authify.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,19 +44,32 @@ public class AuthServiceImpl implements AuthService{
     private final EmailService emailService;
     private final VerifyOtpService verifyOtpService;
 
+    // TODO: Implementare login history
     @Override
-    public AuthResponseDto login(@Valid AuthRequestDto request) {
+    public AuthResponseDto login(@Valid AuthRequestDto request, HttpServletRequest httpRequest) {
         log.info("[LOGIN_USER] Login in esecuzione per {}", request.getEmail());
 
-        Authentication auth = authenticate(request.getEmail(), request.getPassword());
+        String userAgent = httpRequest.getHeader("User-Agent");
+        String userIp = httpRequest.getLocalAddr();
+
+        LoginHistory loginHistory = LoginHistory.builder()
+                .userEmail(request.getEmail())
+                .userAgent(userAgent)
+                .userIp(userIp)
+                .success(false)
+                .build();
+
+        Authentication auth = authenticate(request.getEmail(), request.getPassword(), loginHistory);
         final UserDetails userDetails = (UserDetails) auth.getPrincipal();
         final String token = jwtUtil.generateToken(userDetails);
 
+        loginHistory.setSuccess(true);
         log.info("[LOGIN_USER] Login andato a buon fine per {}", request.getEmail());
         return new AuthResponseDto(userDetails.getUsername(), token);
     }
 
-    private Authentication authenticate(String email, String password) {
+    // TODO: Se il logi fallisce mandarlo a kafka e salvarlo in async
+    private Authentication authenticate(String email, String password, LoginHistory loginHistory) {
         Authentication auth;
         try {
             auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
@@ -62,12 +77,21 @@ public class AuthServiceImpl implements AuthService{
 
         } catch(BadCredentialsException ex) {
             log.warn("[LOGIN_USER] Login fallito per {}, credenziali errate", email);
+            loginHistory.setSuccess(false);
+            loginHistory.setFailureReason("Credenziali errate");
+
             throw new BadCredentialsException("Email o password errati");
         } catch(DisabledException ex) {
             log.warn("[LOGIN_USER] Login fallito per {}, account disabilitato", email);
+            loginHistory.setSuccess(false);
+            loginHistory.setFailureReason("Account disabilitato");
+
             throw new DisabledException("Account disabilitato");
         } catch(Exception ex) {
             log.error("[LOGIN_USER] Login fallito per {}, messaggio: [{}]", email, ex.getMessage());
+            loginHistory.setSuccess(false);
+            loginHistory.setFailureReason("Errore lato server");
+
             throw new RuntimeException("Autenticazione fallita");
         }
     }

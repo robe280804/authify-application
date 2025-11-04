@@ -1,7 +1,15 @@
 package com.robertosodini.authify.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Data
 @Entity
 @Table(name = "login_history_tbl")
 public class LoginHistory {
@@ -10,9 +18,8 @@ public class LoginHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserModel user;
+    @Column(name = "user_email", nullable = false)
+    private String userEmail;
 
     @Column(nullable = false, name = "user_ip")
     public String userIp;
